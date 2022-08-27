@@ -1,4 +1,5 @@
-INTEGER, PLUS, MINUS, EOF = 'INTEGER', 'PLUS', 'MINUS', 'EOF'
+INTEGER, PLUS, MINUS, MULTIPLICATION, DIVISION, EOF = 'INTEGER', 'PLUS', 'MINUS', \
+                                                      'MULTIPLICATION', 'DIVISION', 'EOF'
 
 
 class Token(object):
@@ -61,6 +62,14 @@ class Interpreter(object):
                 self.advance()
                 return Token(MINUS, '-')
 
+            if self.current_char == '*':
+                self.advance()
+                return Token(MULTIPLICATION, '*')
+
+            if self.current_char == '/':
+                self.advance()
+                return Token(DIVISION, '/')
+
             self.error()
 
         return Token(EOF, None)
@@ -75,21 +84,33 @@ class Interpreter(object):
         self.current_token = self.get_next_token()
         left = self.current_token
         self.eat(INTEGER)
+        while self.pos < len(self.text):
+            left = self.calculate_two_integers(left)
+        return left.value
 
+    def calculate_two_integers(self, left):
         op = self.current_token
         if op.type == PLUS:
             self.eat(PLUS)
-        else:
+        elif op.type == MINUS:
             self.eat(MINUS)
+        elif op.type == MULTIPLICATION:
+            self.eat(MULTIPLICATION)
+        else:
+            self.eat(DIVISION)
 
         right = self.current_token
         self.eat(INTEGER)
 
         if op.type == PLUS:
             result = left.value + right.value
-        else:
+        elif op.type == MINUS:
             result = left.value - right.value
-        return result
+        elif op.type == MULTIPLICATION:
+            result = left.value * right.value
+        else:
+            result = left.value / right.value
+        return Token(INTEGER, result)
 
 
 def main():
